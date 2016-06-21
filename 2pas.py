@@ -1,3 +1,4 @@
+#2P article spam detect
 import requests
 import json
 import smtplib
@@ -5,8 +6,19 @@ from email.mime.text import MIMEText
 import time
 import logging
 
-spamUserParam=""
-timesNN=0
+#初始化
+mUser=""		#邮箱账号
+mPass=""		#邮箱密码
+mSmtp=""		#邮箱SMTP地址
+mPort="587"						#邮箱端口
+mFrom=""		#发信人地址
+mTo	=""#收信人地址
+spamUserParam=""				#spamer用户名
+timesNN=0						#重复抓取的计数
+n=30			#2P接口抓取的条数参数
+ntimes=0		#所抓取的n条中出现超过ntimes次，则自动发送邮件
+sleepTime=1	#间隔时间，单位：秒
+timesNRepeat=20	#重复**次抓取到同一个用户，不重复发邮件，避免滥发邮件
 
 def observing_Spam(spamUserParam,timesN):
 	print("Start:");
@@ -16,10 +28,6 @@ def observing_Spam(spamUserParam,timesN):
 	#post 登录的地址，
 	# res=s.post('http://2p.com/toplayadmin/loginSubmit.in',data);
 	# s.connection.close()
-	n=30			#2P接口抓取的条数参数
-	ntimes=0		#所抓取的n条中出现超过ntimes次，则自动发送邮件
-	sleepTime=1	#间隔时间，单位：秒
-	timesNRepeat=20	#重复**次抓取到同一个用户，不重复发邮件，避免滥发邮件
 
 	#抓取的地址
 	r= requests.post('http://2p.com/forum/section/articles?pageSize=%s&pageNo=1&code=D001288'%n);
@@ -60,12 +68,12 @@ def observing_Spam(spamUserParam,timesN):
 		#发送邮件所需的参数
 		msg = MIMEText(mt);
 		msg['Subject'] = "WARNING about spams on 2P articles"
-		msg['From']    = "noreply@mail.2p.com"
-		msg['To']      = "huansongwang@cyou-inc.com"
-		s = smtplib.SMTP('smtp.mailgun.org', 587)
+		msg['From']    = mFrom
+		msg['To']      = mTo
+		s = smtplib.SMTP(mSmtp, mPort)
 		#发送邮件
-		# s.login('noreply@mail.2p.com', 'Si6PWuX64LsvGj63Ht')
-		# s.sendmail(msg['From'], msg['To'], msg.as_string())
+		s.login(mUser, mPass)
+		s.sendmail(msg['From'], msg['To'], msg.as_string())
 		print("Succeed to send mail.\t\t",time.asctime( time.localtime(time.time()) ))
 		s.quit()
 	else:
